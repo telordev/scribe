@@ -1,0 +1,8 @@
+{
+	"name": "anthropic",
+	"kind": "provider",
+	"version": "0.1.0",
+	"description": "Delegate a task to Anthropic Claude (Messages API).",
+	"apiKeyEnv": "ANTHROPIC_API_KEY",
+	"model": "claude-opus-4-8"
+}

@@ -1,0 +1,8 @@
+{
+	"name": "copilot",
+	"kind": "provider",
+	"version": "0.1.0",
+	"description": "Delegate a task to GitHub Copilot models (GitHub Models API).",
+	"apiKeyEnv": "GITHUB_TOKEN",
+	"model": "gpt-4o"
+}

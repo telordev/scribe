@@ -1,0 +1,6 @@
+{
+	"name": "strip-trailing-whitespace",
+	"kind": "hook",
+	"version": "0.1.0",
+	"description": "Strip trailing whitespace from files after tool writes"
+}

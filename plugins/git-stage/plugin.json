@@ -1,0 +1,6 @@
+{
+	"name": "git-stage",
+	"kind": "hook",
+	"version": "0.1.0",
+	"description": "Stage files with git add after tool writes"
+}

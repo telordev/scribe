@@ -1,0 +1,7 @@
+{
+	"name": "fetch",
+	"kind": "mcp",
+	"version": "0.1.0",
+	"description": "HTTP fetch tools (http_get, http_post).",
+	"wasm": "plugin.wasm"
+}

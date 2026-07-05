@@ -1,0 +1,7 @@
+{
+	"name": "jq",
+	"kind": "mcp",
+	"version": "0.1.0",
+	"description": "Query JSON by dot path (json_query).",
+	"wasm": "plugin.wasm"
+}

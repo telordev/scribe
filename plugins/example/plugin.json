@@ -1,0 +1,7 @@
+{
+	"name": "example",
+	"kind": "mcp",
+	"version": "0.1.0",
+	"description": "Example Extism wasm tool plugin (wordcount).",
+	"wasm": "plugin.wasm"
+}

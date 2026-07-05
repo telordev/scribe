@@ -1,0 +1,6 @@
+{
+	"name": "commit-message",
+	"kind": "skill",
+	"version": "0.1.0",
+	"description": "Draft a Conventional Commits message for the staged changes"
+}

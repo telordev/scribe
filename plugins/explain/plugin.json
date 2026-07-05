@@ -1,0 +1,6 @@
+{
+	"name": "explain",
+	"kind": "skill",
+	"version": "0.1.0",
+	"description": "Explain how a piece of code or a file works"
+}
