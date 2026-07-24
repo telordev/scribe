@@ -1,8 +1,7 @@
 # scribe
 
 `scribe` is the simse coding-agent CLI. This repository hosts the public release
-binaries, the install scripts, and the plugin marketplace catalog. The source
-code is private.
+binaries, the install scripts, and the plugin marketplace catalog.
 
 ## Install
 
