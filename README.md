@@ -22,4 +22,4 @@ here into your local data dir. Available: see `plugins/`.
 
 ## License
 
-Proprietary. Copyright 2025-2026 Telor. All rights reserved. Not open source.
+Elastic License 2.0 (ELv2). Copyright 2025-2026 Telor, Inc. See [LICENSE](LICENSE).
