@@ -2,6 +2,6 @@
 	"name": "example",
 	"kind": "mcp",
 	"version": "0.1.0",
-	"description": "Example Extism wasm tool plugin (wordcount).",
+	"description": "Authoring template for Extism wasm tool plugins (exposes one wordcount tool).",
 	"wasm": "plugin.wasm"
 }

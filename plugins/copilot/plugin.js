@@ -27,7 +27,13 @@ function delegate() {
 	const input = JSON.parse(Host.inputString() || "{}");
 	const task = String(input.task || "");
 	const apiKey = input.apiKey;
-	const model = input.model || "gpt-4o";
+	// PUBLISHER-QUALIFIED on purpose. The `models.github.ai/inference` surface
+	// keys its catalog by `publisher/model-name` (`openai/gpt-4o`), not by the
+	// bare vendor id the older Azure-hosted endpoint took; a bare `gpt-4o` is
+	// rejected as an unknown model. The manifest's `model` normally supplies
+	// this — the literal is the fallback for a manifest that omits it, so it
+	// has to be spelled the same way.
+	const model = input.model || "openai/gpt-4o";
 	if (!apiKey) {
 		return fail("copilot: missing API key (set GITHUB_TOKEN with the models scope)");
 	}

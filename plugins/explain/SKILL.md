@@ -6,7 +6,8 @@ description: Explain how a piece of code, a file, or a symbol works
 # Explain
 
 Explain the code referenced by $ARGUMENTS (a file path, a symbol, or a pasted
-snippet). If it names a file or symbol, read it first.
+snippet). If it names a file or symbol, read it first. When no arguments are
+given, explain the code most recently under discussion.
 
 Structure the explanation:
 

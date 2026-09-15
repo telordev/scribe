@@ -1,6 +1,13 @@
 // JSON query MCP plugin: extract a value from a JSON document by dot path.
-// Pure JS — no host imports. Path segments index objects and arrays
-// (e.g. "items.0.name"); an empty path returns the whole document.
+// Path segments index objects and arrays (e.g. "items.0.name"); an empty path
+// returns the whole document.
+//
+// The dispatch is pure JS: this plugin calls neither `host.log` nor
+// `host.fetch`, so it opens no socket and writes nothing to the host log. The
+// sibling plugin.d.ts still DECLARES both host imports, deliberately — it is
+// the same surface the loader's built-in PLUGIN_DTS declares when it compiles a
+// plugin.js on the fly (src/plugin_loader.rs), and keeping the two identical is
+// what makes the prebuilt plugin.wasm and the on-the-fly build the same module.
 
 function tools() {
 	Host.outputString(

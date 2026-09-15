@@ -1,7 +1,22 @@
 # Strip trailing whitespace from a file after Write or Edit tool calls.
 
 [[PostToolUse]]
-matcher = "fs_write|fs_edit"
+# `matcher` is a regex SEARCHED against the tool name
+# (`packages/platform/rig/src/tools/registry.rs`: `hook.matcher.is_match(&call.name)`),
+# and the registered names are `Write` / `Edit` — `simse-cli/src/tools/toolset.rs`,
+# pinned by its `registers_exact_canonical_names` test. This read
+# `fs_write|fs_edit` until 2026-08-19: a valid regex matching no registered
+# tool, so the hook loaded without complaint and never fired once. Keep it
+# spelled the way the tool reference does.
+#
+# ANCHORED on purpose. `is_match` is a search, so a bare `Write|Edit`
+# also hits `NotebookEdit` (`simse-cli/src/tools/toolset.rs`), and a
+# notebook call names its file in `notebook_path` — none of the four keys
+# `extract_path_argument` probes. The fallback takes the first
+# string-valued argument in key order, so `notebook_path` sorts last and
+# is never chosen: the hook would be handed a cell id or a block of cell
+# source instead of a path.
+matcher = "^(Write|Edit)$"
 
 [PostToolUse.hook]
 type = "command"

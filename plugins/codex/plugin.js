@@ -1,5 +1,14 @@
 // OpenAI Codex delegation provider (Chat Completions API).
 //
+// THE DEFAULT MODEL MUST BE ONE CHAT COMPLETIONS SERVES. This endpoint is
+// `/v1/chat/completions`, and the default used to be `gpt-5-codex`, which
+// OpenAI serves only on the Responses API (`/v1/responses`) — so the default
+// path returned a model-not-found error rather than an answer, and the only
+// way to use the plugin was to pass `input.model` explicitly. `gpt-5` is the
+// same family and is served here. A caller who wants a Responses-only model
+// needs a second provider plugin pointed at that endpoint, not a different
+// string in the line below.
+//
 // A `provider` plugin exports `delegate`: it reads `{task, system, model,
 // apiKey}` from the host, calls the vendor API via `host.fetch`, and writes the
 // answer back mcp-style (`{content:[{type:"text",text}]}`). The host resolves
@@ -26,7 +35,7 @@ function delegate() {
 	const input = JSON.parse(Host.inputString() || "{}");
 	const task = String(input.task || "");
 	const apiKey = input.apiKey;
-	const model = input.model || "gpt-5-codex";
+	const model = input.model || "gpt-5";
 	if (!apiKey) {
 		return fail("codex: missing API key (set OPENAI_API_KEY)");
 	}

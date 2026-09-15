@@ -1,6 +1,8 @@
 #!/bin/sh
 # Auto-format based on file extension.
-# Called after fs_write/fs_edit with the modified file path in $1.
+# Called after the `Write` / `Edit` tools with the modified file path in $1.
+# Those are the names the CLI toolset registers; the sibling hooks.toml matcher
+# has to spell them the same way or this script is never invoked.
 
 FILE="$1"
 [ -z "$FILE" ] && exit 0

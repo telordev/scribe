@@ -5,7 +5,8 @@ description: Perform a structured code review on the current changes or a specif
 
 # Code Review
 
-Review the code specified by $ARGUMENTS using this structured approach:
+Review the code specified by $ARGUMENTS — or, when no arguments are given, the
+current uncommitted changes — using this structured approach:
 
 ## 1. Correctness
 - Does the code do what it claims to do?

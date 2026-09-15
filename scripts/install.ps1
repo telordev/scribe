@@ -54,37 +54,43 @@ try {
 # ---------------------------------------------------------------------------
 # Verify checksum
 # ---------------------------------------------------------------------------
-# A missing SHA256SUMS (older releases) downgrades to a warning; a
-# present-but-mismatched checksum is always fatal.
+# Fails CLOSED, matching install.sh: an attacker who can serve a tampered
+# archive can also withhold or strip SHA256SUMS, so treating an absent sums
+# file or an absent entry as "nothing to check" hands that attacker the
+# verification bypass for free. Both abort instead. Every current release
+# publishes SHA256SUMS, and Get-FileHash is built into the Windows PowerShell
+# that runs this script, so unlike the Unix path there is no tolerated gap
+# here at all: the archive is always hashed and always compared.
 
 $SumsUrl = "https://github.com/$Repo/releases/download/$Version/SHA256SUMS"
 $SumsFile = Join-Path $TmpDir "SHA256SUMS"
 try {
     Invoke-WebRequest -Uri $SumsUrl -OutFile $SumsFile -UseBasicParsing
 } catch {
-    Write-Host "SHA256SUMS not available - skipping checksum verification" -ForegroundColor Yellow
-    $SumsFile = $null
+    Write-Error "Could not download SHA256SUMS - refusing to install an unverified archive"
+    exit 1
 }
 
-if ($SumsFile) {
-    $Expected = $null
-    foreach ($Line in Get-Content $SumsFile) {
-        $Parts = $Line -split '\s+', 2
-        if ($Parts.Count -eq 2 -and $Parts[1].Trim() -eq $FileName) {
-            $Expected = $Parts[0].Trim().ToLower()
-        }
-    }
-    if ($Expected) {
-        $Actual = (Get-FileHash -Path $TmpFile -Algorithm SHA256).Hash.ToLower()
-        if ($Actual -ne $Expected) {
-            Write-Error "Checksum mismatch for ${FileName}: expected $Expected, got $Actual"
-            exit 1
-        }
-        Write-Host "Checksum verified" -ForegroundColor Green
-    } else {
-        Write-Host "No checksum entry for $FileName - skipping verification" -ForegroundColor Yellow
+# Exact filename match on field 2 so a name that merely contains this
+# archive's name cannot supply the expected hash.
+$Expected = $null
+foreach ($Line in Get-Content $SumsFile) {
+    $Parts = $Line -split '\s+', 2
+    if ($Parts.Count -eq 2 -and $Parts[1].Trim() -eq $FileName) {
+        $Expected = $Parts[0].Trim().ToLower()
     }
 }
+if (-not $Expected) {
+    Write-Error "SHA256SUMS has no entry for ${FileName} - refusing to install an unverified archive"
+    exit 1
+}
+
+$Actual = (Get-FileHash -Path $TmpFile -Algorithm SHA256).Hash.ToLower()
+if ($Actual -ne $Expected) {
+    Write-Error "Checksum mismatch for ${FileName}: expected $Expected, got $Actual"
+    exit 1
+}
+Write-Host "Checksum verified" -ForegroundColor Green
 
 # ---------------------------------------------------------------------------
 # Extract and install
@@ -120,27 +126,18 @@ if (-not (Test-Path $InstallDir)) {
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
 }
 
+# Archive layout: bin\scribe.exe, LICENSE and README.md — that is the whole
+# tree scripts/assemble-dist.sh zips. The binary embeds the plugin engine;
+# first-party plugins are fetched on demand (scribe plugins install <name>)
+# into the user's config directory, not shipped in the archive. Same statement
+# as install.sh makes at the matching point.
 $SrcBin = Join-Path $TmpDir "bin\$BinaryName"
-$SrcPlugins = Join-Path $TmpDir "share\scribe\plugins"
 if (-not (Test-Path $SrcBin)) {
     Write-Error "Archive missing bin\$BinaryName"
     exit 1
 }
 
 Copy-Item -Path $SrcBin -Destination (Join-Path $InstallDir $BinaryName) -Force
-
-# Plugins -> <prefix>\share\scribe\plugins, where <prefix> is the parent of
-# the bin dir, so the binary's <exe>\..\share\scribe\plugins lookup finds them.
-if (Test-Path $SrcPlugins) {
-    $Prefix = Split-Path -Parent $InstallDir
-    $PluginDest = Join-Path $Prefix "share\scribe\plugins"
-    if (Test-Path $PluginDest) {
-        Remove-Item -Recurse -Force $PluginDest
-    }
-    New-Item -ItemType Directory -Path (Split-Path -Parent $PluginDest) -Force | Out-Null
-    Copy-Item -Path $SrcPlugins -Destination $PluginDest -Recurse -Force
-    Write-Host "Plugins installed to $PluginDest" -ForegroundColor Green
-}
 
 # ---------------------------------------------------------------------------
 # Add to PATH if needed
