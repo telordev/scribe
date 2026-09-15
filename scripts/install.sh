@@ -138,10 +138,16 @@ download_and_install() {
     TMPDIR="$(mktemp -d)"
     trap 'rm -rf "$TMPDIR"' EXIT
 
+    # Both branches MUST name their own failure. `curl -f` exits 22 on a 404 and
+    # `set -e` then kills the script with no output at all, so a release that
+    # does not carry this platform's archive looked like the installer hanging
+    # up mid-sentence, right after the "downloading" line.
     if command -v curl >/dev/null 2>&1; then
-        curl -fsSL "$URL" -o "${TMPDIR}/${FILENAME}"
+        curl -fsSL "$URL" -o "${TMPDIR}/${FILENAME}" \
+            || error "release ${VERSION} publishes no ${FILENAME} — no ${PLATFORM} build in this release"
     elif command -v wget >/dev/null 2>&1; then
-        wget -q "$URL" -O "${TMPDIR}/${FILENAME}"
+        wget -q "$URL" -O "${TMPDIR}/${FILENAME}" \
+            || error "release ${VERSION} publishes no ${FILENAME} — no ${PLATFORM} build in this release"
     fi
 
     verify_checksum "$TMPDIR" "$FILENAME"
