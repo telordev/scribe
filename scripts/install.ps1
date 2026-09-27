@@ -98,30 +98,6 @@ Write-Host "Checksum verified" -ForegroundColor Green
 
 Expand-Archive -Path $TmpFile -DestinationPath $TmpDir -Force
 
-# ---------------------------------------------------------------------------
-# Remove old versions from common locations
-# ---------------------------------------------------------------------------
-
-$OldLocations = @(
-    "$env:ProgramFiles\scribe\scribe.exe",
-    "$env:USERPROFILE\.cargo\bin\scribe.exe",
-    "$env:USERPROFILE\bin\scribe.exe",
-    "$env:USERPROFILE\scoop\shims\scribe.exe"
-)
-
-foreach ($OldPath in $OldLocations) {
-    if (Test-Path $OldPath) {
-        Write-Host "Removing old scribe at $OldPath" -ForegroundColor Yellow
-        Remove-Item -Force $OldPath -ErrorAction SilentlyContinue
-    }
-}
-
-# Also remove from install dir if it exists (will be replaced)
-$ExistingInstall = Join-Path $InstallDir $BinaryName
-if (Test-Path $ExistingInstall) {
-    Remove-Item -Force $ExistingInstall -ErrorAction SilentlyContinue
-}
-
 if (-not (Test-Path $InstallDir)) {
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
 }
@@ -137,7 +113,30 @@ if (-not (Test-Path $SrcBin)) {
     exit 1
 }
 
+# Install FIRST. Copy-Item -Force replaces an existing copy in place, and a
+# failure stops the script ($ErrorActionPreference = "Stop") with the old copy
+# still there — the old order deleted it first, so a failed copy left no scribe.
 Copy-Item -Path $SrcBin -Destination (Join-Path $InstallDir $BinaryName) -Force
+
+# ---------------------------------------------------------------------------
+# Copies this installer did not put there
+# ---------------------------------------------------------------------------
+
+# Named, never deleted. Program Files is an administrator's, the scoop shim is
+# scoop's and ~/.cargo/bin is cargo's: a file of that name may be a different
+# program, and deleting a package manager's shim breaks its own bookkeeping.
+$OtherLocations = @(
+    "$env:ProgramFiles\scribe\scribe.exe",
+    "$env:USERPROFILE\.cargo\bin\scribe.exe",
+    "$env:USERPROFILE\bin\scribe.exe",
+    "$env:USERPROFILE\scoop\shims\scribe.exe"
+)
+
+foreach ($OtherPath in $OtherLocations) {
+    if (Test-Path $OtherPath) {
+        Write-Host "Left $OtherPath in place (this installer did not put it there). If it comes first on PATH it runs instead of $InstallDir\$BinaryName." -ForegroundColor Yellow
+    }
+}
 
 # ---------------------------------------------------------------------------
 # Add to PATH if needed

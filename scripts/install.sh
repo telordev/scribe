@@ -3,13 +3,14 @@
 # Usage: curl -fsSL https://cdn.simse.dev/install.sh | sh
 #
 # Installs the latest scribe binary to /usr/local/bin (or ~/.local/bin if
-# /usr/local/bin is not writable).
+# /usr/local/bin is not writable). Set SCRIBE_INSTALL_DIR to choose the
+# directory yourself.
 
 set -e
 
 REPO="telordev/scribe"
 BINARY_NAME="scribe"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="${SCRIBE_INSTALL_DIR:-/usr/local/bin}"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -69,19 +70,37 @@ get_latest_version() {
 # Download and install
 # ---------------------------------------------------------------------------
 
-remove_old_versions() {
-    # Remove any existing scribe binaries from common locations so stale
-    # versions don't shadow the new install.
-    for dir in /usr/local/bin /usr/bin "$HOME/.local/bin" "$HOME/bin" "$HOME/.cargo/bin"; do
-        if [ -f "${dir}/${BINARY_NAME}" ]; then
-            info "removing old scribe at ${dir}/${BINARY_NAME}"
-            if [ -w "${dir}/${BINARY_NAME}" ]; then
-                rm -f "${dir}/${BINARY_NAME}"
-            else
-                sudo rm -f "${dir}/${BINARY_NAME}" 2>/dev/null || true
-            fi
+remove_other_copies() {
+    # Runs AFTER the new binary is in place, so no failure on the way can leave
+    # the machine with no scribe at all.
+    #
+    # Only the places this script installs to are its own to clean up. A
+    # `scribe` anywhere else is left alone and named instead: /usr/bin belongs
+    # to the package manager, ~/.cargo/bin to cargo, and a file of the same name
+    # there may be a different program entirely.
+    for dir in /usr/local/bin "$HOME/.local/bin" "$INSTALL_DIR"; do
+        [ "$dir" = "$TARGET" ] && continue
+        [ -f "${dir}/${BINARY_NAME}" ] || continue
+        info "removing old scribe at ${dir}/${BINARY_NAME}"
+        if [ -w "$dir" ]; then
+            rm -f "${dir}/${BINARY_NAME}"
+        else
+            sudo rm -f "${dir}/${BINARY_NAME}" 2>/dev/null \
+                || info "could not remove ${dir}/${BINARY_NAME} — remove it by hand"
         fi
     done
+    for dir in /usr/bin "$HOME/bin" "$HOME/.cargo/bin"; do
+        if [ -f "${dir}/${BINARY_NAME}" ]; then
+            info "left ${dir}/${BINARY_NAME} in place (this script did not install it)"
+        fi
+    done
+}
+
+warn_if_shadowed() {
+    _found="$(command -v "$BINARY_NAME" 2>/dev/null || true)"
+    if [ -n "$_found" ] && [ "$_found" != "${TARGET}/${BINARY_NAME}" ]; then
+        info "note: ${_found} comes before ${TARGET} on your PATH and will run instead of the version just installed — remove it or reorder PATH"
+    fi
 }
 
 verify_checksum() {
@@ -162,10 +181,6 @@ download_and_install() {
         error "archive missing bin/${BINARY_NAME}"
     fi
 
-    # Download verified — only now remove old versions, so a failed download
-    # never leaves the system with no scribe at all.
-    remove_old_versions
-
     # Choose install location.
     if [ -w "$INSTALL_DIR" ]; then
         TARGET="$INSTALL_DIR"
@@ -183,6 +198,8 @@ download_and_install() {
     $SUDO chmod +x "${TARGET}/${BINARY_NAME}"
     info "scribe ${VERSION} installed to ${TARGET}/${BINARY_NAME}"
 
+    remove_other_copies
+
     # Ensure target is in PATH; update shell profile if needed
     case ":$PATH:" in
         *":${TARGET}:"*) ;;
@@ -195,12 +212,14 @@ download_and_install() {
                 *)    PROFILE="$HOME/.profile" ;;
             esac
             if [ -f "$PROFILE" ] && ! grep -q "${TARGET}" "$PROFILE" 2>/dev/null; then
+                # shellcheck disable=SC2016 # $PATH is written literally, to expand when the profile runs
                 printf '\nexport PATH="%s:$PATH"\n' "$TARGET" >> "$PROFILE"
                 info "added ${TARGET} to ${PROFILE}"
             fi
             export PATH="${TARGET}:$PATH"
             ;;
     esac
+    warn_if_shadowed
 }
 
 # ---------------------------------------------------------------------------
