@@ -6,14 +6,21 @@ binaries, the install scripts, and the plugin marketplace catalog.
 ## Install
 
 ```bash
-# macOS / Linux
+# Linux
 curl -fsSL https://cdn.simse.dev/install.sh | sh
 
 # Windows (PowerShell)
 irm https://cdn.simse.dev/install.ps1 | iex
 ```
 
-Then run `scribe`.
+Then run `scribe`. The installers verify every download against the release's
+`SHA256SUMS` and refuse an archive they cannot verify.
+
+## Platforms
+
+Release archives are published for Linux on x86_64 and aarch64, and for Windows
+on x86_64. Windows on ARM installs the x86_64 build, which it runs under its
+built-in emulation. macOS archives are not published yet.
 
 ## Plugins
 
@@ -22,4 +29,4 @@ here into your local data dir. Available: see `plugins/`.
 
 ## License
 
-Elastic License 2.0 (ELv2). Copyright 2025-2026 Telor, Inc. See [LICENSE](LICENSE).
+Elastic License 2.0 (ELv2). Copyright 2025-2026 Telor. See [LICENSE](LICENSE).

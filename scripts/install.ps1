@@ -32,6 +32,17 @@ if (-not $Version) {
     exit 1
 }
 
+# Windows 11 on ARM runs x64 programs through its built-in emulation, so an
+# ARM64 machine installs the x64 build when a release carries no ARM64 one,
+# rather than stopping.
+if ($Platform -eq "windows-aarch64") {
+    $Names = @($Release.assets | ForEach-Object { $_.name })
+    if (($Names -notcontains "scribe-windows-aarch64.zip") -and ($Names -contains "scribe-windows-x86_64.zip")) {
+        Write-Host "No ARM64 build in $Version; installing the x64 build, which Windows on ARM runs under emulation." -ForegroundColor Yellow
+        $Platform = "windows-x86_64"
+    }
+}
+
 # ---------------------------------------------------------------------------
 # Download
 # ---------------------------------------------------------------------------
